@@ -140,12 +140,14 @@ async function leerTipo(tipo) {
   try {
     const info = await head(RUTAS[tipo]);
     const res = await fetch(info.url);
+    if (!res.ok) throw new Error("fetch status " + res.status);
     const buf = Buffer.from(await res.arrayBuffer());
     return { data: PARSERS[tipo](buf), actualizado: info.uploadedAt, error: null };
   } catch (e) {
-    return { data: null, actualizado: null, error: "No se ha subido este archivo aún" };
+    return { data: null, actualizado: null, error: "DEBUG: " + (e && e.message ? e.message : String(e)) };
   }
 }
+
 
 // ============================================================
 // SUBIDA DE ARCHIVOS (multipart)
