@@ -423,11 +423,14 @@ const JS_CLIENTE =
   "  cont.innerHTML = html;" +
   "}" +
 
-  "var ARCHIVOS = [" +
+   "var ARCHIVOS = [" +
   "  { tipo: 'agentes', nombre: 'Críticas por agente', detalle: 'Columnas: ANALISTA, CANTIDAD', ob: true }," +
   "  { tipo: 'horas', nombre: 'Críticas por horas', detalle: 'Columnas: ANALISTA, RANGO_HORA, ORDEN_HORA, CANTIDAD', ob: false }," +
   "  { tipo: 'metas', nombre: 'Promedio (metas)', detalle: 'Columnas: ANALISTA, PORCENTAJE_CUMPLIMIENTO, CUMPLIMIENTO', ob: true }" +
   "];" +
+  "var erroresSubida = {};" +
+  "var subiendo = {};" +
+  "var errorLogin = '';" +
 
   "function renderAdmin() {" +
   "  var cont = document.getElementById('vista-admin');" +
@@ -436,25 +439,67 @@ const JS_CLIENTE =
   "      <p class=\"ayuda\" style=\"margin-top:0\">Ingresa la contraseña de admin para subir los Excel.</p>" +
   "      <input type=\"password\" id=\"pass-admin\" placeholder=\"Contraseña\" />" +
   "      <button onclick=\"loginAdmin()\">Entrar</button>" +
-  "      <p class=\"error\" id=\"error-login\"></p>" +
+  "      <p class=\"error\">' + errorLogin + '</p>" +
   "    </div>';" +
   "    return;" +
   "  }" +
   "  var html = '<div class=\"tarjeta\"><p class=\"ayuda\" style=\"margin-top:0\">Sube aquí los 3 archivos Excel. Cada subida reemplaza a la anterior del mismo tipo.</p>';" +
   "  ARCHIVOS.forEach(function(a){" +
   "    var info = datos && datos[a.tipo] ? datos[a.tipo] : null;" +
-  "    var badge = info && info.actualizado ? 'Actualizado: ' + new Date(info.actualizado).toLocaleString('es-CO') : 'Sin subir';" +
+  "    var badge = subiendo[a.tipo] ? 'Subiendo...' : (info && info.actualizado ? 'Actualizado: ' + new Date(info.actualizado).toLocaleString('es-CO') : 'Sin subir');" +
   "    html += '<div class=\"subida-fila\">';" +
   "    html += '<div style=\"display:flex;justify-content:space-between;align-items:center;\">';" +
   "    html += '<strong style=\"font-size:14px;\">' + a.nombre + (a.ob ? ' <span style=\"color:#e74c3c\">*</span>' : '') + '</strong>';" +
-  "    html += '<span class=\"badge\" id=\"badge-' + a.tipo + '\">' + badge + '</span></div>';" +
+  "    html += '<span class=\"badge\">' + badge + '</span></div>';" +
   "    html += '<div class=\"ayuda\" style=\"margin:2px 0 6px\">' + a.detalle + '</div>';" +
   "    html += '<input type=\"file\" accept=\".xlsx,.xls\" onchange=\"subirArchivo(\\'' + a.tipo + '\\', this)\" />';" +
-  "    html += '<p class=\"error\" id=\"error-' + a.tipo + '\"></p>';" +
+  "    html += '<p class=\"error\">' + (erroresSubida[a.tipo] || '') + '</p>';" +
   "    html += '</div>';" +
   "  });" +
   "  html += '</div>';" +
   "  cont.innerHTML = html;" +
+  "}" +
+
+  "function loginAdmin() {" +
+  "  var pass = document.getElementById('pass-admin').value;" +
+  "  fetch('/login', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ password: pass }) })" +
+  "    .then(function(r){ return r.json().then(function(j){ return { ok: r.ok, j: j }; }); })" +
+  "    .then(function(res){" +
+  "      if (!res.ok) { errorLogin = res.j.error || 'Error'; renderAdmin(); return; }" +
+  "      errorLogin = '';" +
+  "      autenticado = true;" +
+  "      renderAdmin();" +
+  "    })" +
+  "    .catch(function(e){ errorLogin = 'Error de conexión: ' + e.message; renderAdmin(); });" +
+  "}" +
+
+  "function subirArchivo(tipo, input) {" +
+  "  var file = input.files[0];" +
+  "  if (!file) return;" +
+  "  var form = new FormData();" +
+  "  form.append('tipo', tipo);" +
+  "  form.append('file', file);" +
+  "  subiendo[tipo] = true;" +
+  "  erroresSubida[tipo] = '';" +
+  "  renderAdmin();" +
+  "  fetch('/upload', { method: 'POST', body: form })" +
+  "    .then(function(r){ return r.json().then(function(j){ return { ok: r.ok, j: j }; }); })" +
+  "    .then(function(res){" +
+  "      subiendo[tipo] = false;" +
+  "      if (!res.ok) {" +
+  "        erroresSubida[tipo] = res.j.error || 'No se pudo subir';" +
+  "        if (res.j.error === 'No autenticado') autenticado = false;" +
+  "        renderAdmin();" +
+  "        return;" +
+  "      }" +
+  "      erroresSubida[tipo] = '';" +
+  "      cargarDatos();" +
+  "    })" +
+  "    .catch(function(e){" +
+  "      subiendo[tipo] = false;" +
+  "      erroresSubida[tipo] = 'Error de conexión: ' + e.message;" +
+  "      renderAdmin();" +
+  "    });" +
   "}" +
 
   "function loginAdmin() {" +
