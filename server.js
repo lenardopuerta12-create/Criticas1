@@ -423,7 +423,7 @@ const JS_CLIENTE =
   "  cont.innerHTML = html;" +
   "}" +
 
-   "var ARCHIVOS = [" +
+  "var ARCHIVOS = [" +
   "  { tipo: 'agentes', nombre: 'Críticas por agente', detalle: 'Columnas: ANALISTA, CANTIDAD', ob: true }," +
   "  { tipo: 'horas', nombre: 'Críticas por horas', detalle: 'Columnas: ANALISTA, RANGO_HORA, ORDEN_HORA, CANTIDAD', ob: false }," +
   "  { tipo: 'metas', nombre: 'Promedio (metas)', detalle: 'Columnas: ANALISTA, PORCENTAJE_CUMPLIMIENTO, CUMPLIMIENTO', ob: true }" +
@@ -502,37 +502,7 @@ const JS_CLIENTE =
   "    });" +
   "}" +
 
-  "function loginAdmin() {" +
-  "  var pass = document.getElementById('pass-admin').value;" +
-  "  fetch('/login', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ password: pass }) })" +
-  "    .then(function(r){ return r.json().then(function(j){ return { ok: r.ok, j: j }; }); })" +
-  "    .then(function(res){" +
-  "      if (!res.ok) { document.getElementById('error-login').textContent = res.j.error || 'Error'; return; }" +
-  "      autenticado = true;" +
-  "      renderAdmin();" +
-  "    });" +
-  "}" +
-
-  "function subirArchivo(tipo, input) {" +
-  "  var file = input.files[0];" +
-  "  if (!file) return;" +
-  "  var form = new FormData();" +
-  "  form.append('tipo', tipo);" +
-  "  form.append('file', file);" +
-  "  document.getElementById('badge-' + tipo).textContent = 'Subiendo...';" +
-  "  document.getElementById('error-' + tipo).textContent = '';" +
-  "  fetch('/upload', { method: 'POST', body: form })" +
-  "    .then(function(r){ return r.json().then(function(j){ return { ok: r.ok, j: j }; }); })" +
-  "    .then(function(res){" +
-  "      if (!res.ok) {" +
-  "        document.getElementById('error-' + tipo).textContent = res.j.error || 'No se pudo subir';" +
-  "        if (res.j.error === 'No autenticado') { autenticado = false; renderAdmin(); }" +
-  "        else renderAdmin();" +
-  "        return;" +
-  "      }" +
-  "      cargarDatos();" +
-  "    });" +
-  "}" +
+  "cargarDatos();";
 
 // ============================================================
 // ENRUTADOR
