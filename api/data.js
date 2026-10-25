@@ -68,9 +68,11 @@ function cleanDebt(d) {
     const m = Number(a && a.monto);
     if (!Number.isFinite(m) || m <= 0) return null;
     const f = /^\d{4}-\d{2}-\d{2}$/.test(String(a && a.fecha)) ? a.fecha : String(d.fecha);
-    return { id: String((a && a.id) || '').slice(0, 40), monto: m, fecha: f };
+    const out = { id: String((a && a.id) || '').slice(0, 40), monto: m, fecha: f };
+    if (a && a.nota) out.nota = String(a.nota).slice(0, 60);
+    return out;
   }).filter(Boolean).slice(0, 500) : [];
-  return {
+  const out = {
     id: String(d.id || '').slice(0, 40),
     persona: String(d.persona || '').slice(0, 40),
     monto,
@@ -78,6 +80,8 @@ function cleanDebt(d) {
     nota: String(d.nota || '').slice(0, 80),
     abonos,
   };
+  if (/^\d{4}-\d{2}-\d{2}$/.test(String(d.limite || ''))) out.limite = String(d.limite);
+  return out;
 }
 
 function cleanPlan(p) {
